@@ -39,6 +39,7 @@ public class AnaxSuiteRunner {
 
     @Value("${anax.report.directory:reports/}") String reportDirectory;
     @Value("${anax.exec.suite:ALL}") String executeSuite;
+    @Value("${anax.ignore.suite:#{null}") String ignoreSuite;
     @Value("${enable.video:true}") Boolean videoOn;
     @Value("${enable.screenshot:true}") Boolean screenshotOn;
 
@@ -69,16 +70,17 @@ public class AnaxSuiteRunner {
                         !executeSuite.contentEquals(name)) {
                     log.warn("Suite {} not selected for execution (selected: {})", name, executeSuite);
                 } else {
-                    final Suite suite = suitesMap.get(name);
+                    if (!name.equals(ignoreSuite)) {
+                        final Suite suite = suitesMap.get(name);
 
-                    suite.getTests().forEach(test -> {
-                        pool.submit(() -> {
-                            ParallelPlanRunner runner =
+                        suite.getTests().forEach(test -> {
+                            pool.submit(() -> {
+                                ParallelPlanRunner runner =
                                     new ParallelPlanRunner(suite, test);
-                            runner.executeAndWait();
+                                runner.executeAndWait();
+                            });
                         });
-                    });
-
+                    }
 
                 }
             } catch (Exception rpe) {
@@ -117,18 +119,20 @@ public class AnaxSuiteRunner {
                         !executeSuite.contentEquals(name)) {
                     log.warn("Suite {} not selected for execution (selected: {})", name, executeSuite);
                 } else {
-                    final Suite suite = suitesMap.get(name);
+                    if (!name.equals(ignoreSuite)) {
+                        final Suite suite = suitesMap.get(name);
 
-                    try  {
-                        reporter.startOutput(reportDirectory, name);
-                        final boolean suiteFail = executeTestSuite(suite);
-                        globalFailures.compareAndSet(false, suiteFail);
-                    } catch (IOException ioe) {
-                        globalFailures.set(true);
-                        throw new ReportException("IO Error writing report file : " + ioe.getMessage(), ioe);
-                    } finally {
-			            controller.quit();
-		            }
+                        try  {
+                            reporter.startOutput(reportDirectory, name);
+                            final boolean suiteFail = executeTestSuite(suite);
+                            globalFailures.compareAndSet(false, suiteFail);
+                        } catch (IOException ioe) {
+                            globalFailures.set(true);
+                            throw new ReportException("IO Error writing report file : " + ioe.getMessage(), ioe);
+                        } finally {
+                            controller.quit();
+                        }
+                    }
                 }
             } catch (ReportException rpe) {
                 log.error("Failed to initialize, check reports subsystem {}", rpe.getMessage(),rpe);

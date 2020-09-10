@@ -292,6 +292,11 @@ public class VoidController implements WebController {
     }
 
     @Override
+    public boolean isComponentVisible(String locator, long seconds, long milliseconds) {
+        return false;
+    }
+
+    @Override
     public boolean isComponentNotVisible(String locator) {
         // TODO Auto-generated method stub
         return false;

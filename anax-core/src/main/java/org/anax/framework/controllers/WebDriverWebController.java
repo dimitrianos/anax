@@ -815,6 +815,18 @@ public class WebDriverWebController implements WebController {
         }
     }
 
+    @Override
+    public boolean isComponentVisible(String locator, long seconds, long milliseconds) {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, seconds, milliseconds);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(determineLocator(locator)));
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+
+        }
+    }
+
     /*
      * (non-Javadoc)
      *

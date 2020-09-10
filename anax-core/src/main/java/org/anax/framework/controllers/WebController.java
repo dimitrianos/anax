@@ -504,6 +504,15 @@ public interface WebController {
     boolean isComponentVisible(String locator,long seconds);
 
     /**
+     * Determines if the specified element is visible.
+     *
+     * @param locator the locator of the element
+     * @param seconds the time in seconds, where element needs to maintain visibility
+     * @return true, if the component is visible for the specified time
+     */
+    boolean isComponentVisible(String locator,long seconds, long milliseconds);
+
+    /**
      * Checks if a specified component is not visible.
      *
      * @param locator the locator of the element

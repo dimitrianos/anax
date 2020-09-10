@@ -234,6 +234,24 @@ public class Verify {
     }
 
     /**
+     * Check that an Element is visible.
+     *
+     * @param locator the locator of the element
+     * @param seconds the least time in seconds that element must remain visible
+     * @param milliseconds the least time in milliseconds that element must remain visible
+     */
+    public void elementVisible(String locator,long seconds, long milliseconds) {
+        try {
+            Assert.isTrue(controller.isComponentVisible(locator,seconds, milliseconds),ELEMENT_LOCATOR + locator + IS_NOT_VISIBLE);
+            controller.highlight(locator,PASS_COLOR);
+            info(ELEMENT_LOCATOR + locator + IS_VISIBLE);
+        } catch (IllegalArgumentException e) {
+            error(ELEMENT_LOCATOR + locator + IS_NOT_VISIBLE);
+            throw e;
+        }
+    }
+
+    /**
      * Check that an Element is not visible.
      *
      * @param locator the locator of the element

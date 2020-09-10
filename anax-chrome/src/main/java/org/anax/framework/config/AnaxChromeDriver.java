@@ -1,5 +1,6 @@
 package org.anax.framework.config;
 
+import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.anax.framework.configuration.AnaxDriver;
 import org.anax.framework.controllers.WebController;
@@ -16,6 +17,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.util.StringUtils;
+
 import java.net.URL;
 
 
@@ -23,6 +27,7 @@ import java.net.URL;
 @Slf4j
 public class AnaxChromeDriver {
 
+    final String anaxUserJWTTokenProperty = "anax.login.jwt.token";
     @Value("${anax.target.url:http://www.google.com}")
     String targetUrl;
     @Value("${anax.remote.host:NOT_CONFIGURED}")
@@ -33,6 +38,15 @@ public class AnaxChromeDriver {
     String maximize;
     @Value("${anax.accept_untrusted_certs:false}")
     Boolean acceptUntrustedCerts;
+    @Value("${anax.application.user:#{null}}")
+    String applicationUser;
+    @Value("${anax.default.download.dir:#{null}}")
+    private String defaultDownloadDir;
+    @Value("${anax.headless.browser:false}")
+    Boolean headless;
+
+    @Autowired
+    Environment environment;
 
 
     @ConditionalOnMissingBean
@@ -50,14 +64,25 @@ public class AnaxChromeDriver {
                 options.addArguments(x);
             }
             options.merge(capabilities);
+            if (headless) {
+                options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200");
+            }
 
             if(acceptUntrustedCerts) {
-                options.addArguments("ignore-certificate-errors");
+                options.addArguments("--ignore-certificate-errors");
+            }
+            if (defaultDownloadDir != null) {
+                HashMap<String, Object> chromePrefs = new HashMap<>();
+                chromePrefs.put("profile.default_content_settings.popups", 0);
+                chromePrefs.put("download.default_directory", defaultDownloadDir);
+                options.setExperimentalOption("prefs", chromePrefs);
             }
 
             return () -> {
                 ChromeDriver driver = new ChromeDriver(service, options);
-                driver.get(targetUrl);
+                if (StringUtils.isEmpty(applicationUser) || StringUtils.isEmpty(environment.getProperty(anaxUserJWTTokenProperty + "." + applicationUser))) {
+                    driver.get(targetUrl);
+                }
                 return driver;
             };
         } else {
