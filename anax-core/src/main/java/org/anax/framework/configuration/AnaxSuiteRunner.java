@@ -38,7 +38,7 @@ public class AnaxSuiteRunner {
     private String reportDirectory;
     @Value("${anax.exec.suite:ALL}")
     private String executeSuite;
-    @Value("${anax.ignore.suite:#{null}")
+    @Value("${anax.ignore.suite:#{null}}")
     private String ignoreSuite;
     @Value("${enable.video:true}")
     private Boolean videoOn;
