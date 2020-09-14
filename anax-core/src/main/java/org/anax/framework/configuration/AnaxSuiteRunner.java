@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,23 +30,32 @@ public class AnaxSuiteRunner {
 
     private final AnaxTestReporter reporter;
 
-    Map<String,Suite> suitesMap = new HashMap<>();
+    private final Map<String, Suite> suitesMap = new HashMap<>();
 
     boolean shouldAlsoExecute = false;
 
-    @Value("${anax.report.directory:reports/}") String reportDirectory;
-    @Value("${anax.exec.suite:ALL}") String executeSuite;
-    @Value("${anax.ignore.suite:#{null}") String ignoreSuite;
-    @Value("${enable.video:true}") Boolean videoOn;
-    @Value("${enable.screenshot:true}") Boolean screenshotOn;
+    @Value("${anax.report.directory:reports/}")
+    private String reportDirectory;
+    @Value("${anax.exec.suite:ALL}")
+    private String executeSuite;
+    @Value("${anax.ignore.suite:#{null}")
+    private String ignoreSuite;
+    @Value("${enable.video:true}")
+    private Boolean videoOn;
+    @Value("${enable.screenshot:true}")
+    private Boolean screenshotOn;
+    /**
+     * If the TRUE then the browser with quit after each suite.
+     */
+    @Value("${anax.quit.browser.between.suites:true}")
+    private Boolean quitBrowserBetweenSuites;
 
     @Autowired
-    WebController controller;
+    private WebController controller;
 
     public AnaxSuiteRunner(@Autowired AnaxTestReporter reporter) {
         this.reporter = reporter;
     }
-
 
     @PostConstruct
     public void postConstruct() {
@@ -61,7 +67,6 @@ public class AnaxSuiteRunner {
     }
 
     public void createParallelPlan(int threadPoolSize) {
-
         final ExecutorService pool = Executors.newFixedThreadPool(threadPoolSize);
 
         suitesMap.keySet().stream().forEach((String name) -> {
@@ -87,11 +92,11 @@ public class AnaxSuiteRunner {
                 log.error("Failed to initialize, check reports subsystem {}", rpe.getMessage(), rpe);
             }
         });
-
-
     }
 
     public boolean createExecutionPlan(boolean executePlan) {
+        log.info("Property \"anax.quit.browser.between.suites\" is set to {}", quitBrowserBetweenSuites);
+
         shouldAlsoExecute = executePlan;
 
         if (shouldAlsoExecute) { //TODO handle the boolean for execution or display
@@ -101,7 +106,7 @@ public class AnaxSuiteRunner {
         }
 
         //configuring reporters here
-        if(videoOn && reporter instanceof ReporterSupportsVideo) {
+        if (videoOn && reporter instanceof ReporterSupportsVideo) {
             ((ReporterSupportsVideo) reporter).videoRecording(videoOn, "allure-recordings");
             log.info("Enabled Video recordings feature");
         }
@@ -113,7 +118,10 @@ public class AnaxSuiteRunner {
 
         AtomicBoolean globalFailures = new AtomicBoolean(false);
 
-        suitesMap.keySet().stream().forEach( (String name) -> {
+        // Collect all the suites names.
+        final List<String> suites = new ArrayList<>(suitesMap.keySet());
+
+        suitesMap.keySet().forEach((String name) -> {
             try {
                 if (!executeSuite.contentEquals("ALL") &&
                         !executeSuite.contentEquals(name)) {
@@ -122,7 +130,7 @@ public class AnaxSuiteRunner {
                     if (!name.equals(ignoreSuite)) {
                         final Suite suite = suitesMap.get(name);
 
-                        try  {
+                        try {
                             reporter.startOutput(reportDirectory, name);
                             final boolean suiteFail = executeTestSuite(suite);
                             globalFailures.compareAndSet(false, suiteFail);
@@ -130,7 +138,19 @@ public class AnaxSuiteRunner {
                             globalFailures.set(true);
                             throw new ReportException("IO Error writing report file : " + ioe.getMessage(), ioe);
                         } finally {
-                            controller.quit();
+                            if (quitBrowserBetweenSuites) {
+                                // Default case, just quit between the suites
+                                controller.quit();
+                            } else if (suites.size() == 1) {
+                                // If not set to quit after each suite,
+                                // then quit after the last one
+                                controller.quit();
+                            } else {
+                                // If not set to quit after each suite,
+                                // then remove the already run suite from the list
+                                // without quitting.
+                                suites.remove(name);
+                            }
                         }
                     }
                 }
