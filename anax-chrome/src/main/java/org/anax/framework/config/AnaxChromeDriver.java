@@ -44,6 +44,8 @@ public class AnaxChromeDriver {
     private String defaultDownloadDir;
     @Value("${anax.headless.browser:false}")
     Boolean headless;
+    @Value("${anax.defaultSleepMillis:10000}")
+    Integer defaultSleepMillis;
 
     @Autowired
     Environment environment;
@@ -102,7 +104,7 @@ public class AnaxChromeDriver {
     @ConditionalOnMissingBean
     @Bean
     public WebController getWebController(@Autowired AnaxDriver anaxDriver, @Value("${anax.defaultWaitSeconds:5}") Integer defaultWaitSeconds) throws Exception {
-        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds);
+        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds, defaultSleepMillis);
     }
 
 }

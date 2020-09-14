@@ -32,6 +32,8 @@ public class AnaxFirefoxDriver {
     String maximize;
     @Value("${anax.accept_untrusted_certs:false")
     Boolean acceptUntrustedCerts;
+    @Value("${anax.defaultSleepMillis:10000}")
+    Integer defaultSleepMillis;
 
     @ConditionalOnMissingBean
     @Bean
@@ -70,7 +72,8 @@ public class AnaxFirefoxDriver {
     @ConditionalOnMissingBean
     @Bean
     public WebController getWebController(@Autowired AnaxDriver anaxDriver, @Value("${anax.defaultWaitSeconds:5}") Integer defaultWaitSeconds) throws Exception {
-        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds);
+        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds,
+            defaultSleepMillis);
     }
 
 }
