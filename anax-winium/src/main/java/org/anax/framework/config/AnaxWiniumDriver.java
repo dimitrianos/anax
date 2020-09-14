@@ -21,6 +21,8 @@ public class AnaxWiniumDriver {
     String remoteHost;
     @Value("${anax.remote.port:NOT_CONFIGURED}")
     String remotePort;
+    @Value("${anax.defaultSleepMillis:10000}")
+    Integer defaultSleepMillis;
 
 
     @ConditionalOnMissingBean
@@ -44,7 +46,8 @@ public class AnaxWiniumDriver {
     @ConditionalOnMissingBean
     @Bean
     public WebController getWebController(@Autowired AnaxDriver anaxDriver, @Value("${anax.defaultWaitSeconds:5}") Integer defaultWaitSeconds) throws Exception {
-        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds);
+        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds,
+            defaultSleepMillis);
     }
 
 }

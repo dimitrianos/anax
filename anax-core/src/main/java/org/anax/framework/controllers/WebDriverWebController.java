@@ -10,7 +10,6 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import java.io.File;
@@ -33,6 +32,8 @@ public class WebDriverWebController implements WebController {
     /** The Constant THREAD_SLEEP. */
     private static final long THREAD_SLEEP = 10000;
 
+    private final long defaultWaitSleepInMillis;
+
     /** The Constant XPATH. */
     private static final String XPATH = "xpath";
 
@@ -48,10 +49,17 @@ public class WebDriverWebController implements WebController {
     /** The Constant ID. */
     private static final String ID = "id";
 
-    public WebDriverWebController(WebDriver webDriver, AnaxDriver anaxDriver, long defaultWaitSeconds) {
+    public WebDriverWebController(WebDriver webDriver, AnaxDriver anaxDriver,
+        long defaultWaitSeconds) {
+        this(webDriver, anaxDriver, defaultWaitSeconds, THREAD_SLEEP);
+    }
+
+    public WebDriverWebController(WebDriver webDriver, AnaxDriver anaxDriver,
+        long defaultWaitSeconds, long defaultWaitSleepInMillis) {
         this.driver = webDriver;
         this.anaxDriver = anaxDriver;
         this.defaultWaitSeconds = defaultWaitSeconds;
+        this.defaultWaitSleepInMillis = defaultWaitSleepInMillis;
     }
 
     /**
@@ -163,7 +171,7 @@ public class WebDriverWebController implements WebController {
      */
     @Override
     public WebElement waitForElement(String locator, long waitSeconds) {
-        WebDriverWait wait = new WebDriverWait(driver, waitSeconds,THREAD_SLEEP);
+        WebDriverWait wait = new WebDriverWait(driver, waitSeconds,defaultWaitSleepInMillis);
         return wait.until(ExpectedConditions.visibilityOfElementLocated(determineLocator(locator)));
     }
 
@@ -191,7 +199,7 @@ public class WebDriverWebController implements WebController {
      */
 
     public WebElement waitForElementPresence(String locator, long waitSeconds) {
-        WebDriverWait wait = new WebDriverWait(driver, waitSeconds,THREAD_SLEEP);
+        WebDriverWait wait = new WebDriverWait(driver, waitSeconds,defaultWaitSleepInMillis);
         return wait.until(ExpectedConditions.presenceOfElementLocated(determineLocator(locator)));
     }
 
@@ -204,7 +212,7 @@ public class WebDriverWebController implements WebController {
      */
     @Override
     public List<WebElement> findElements(String locator, long waitSeconds) {
-        WebDriverWait wait = new WebDriverWait(driver, waitSeconds,THREAD_SLEEP);
+        WebDriverWait wait = new WebDriverWait(driver, waitSeconds,defaultWaitSleepInMillis);
         return wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(determineLocator(locator)));
     }
 

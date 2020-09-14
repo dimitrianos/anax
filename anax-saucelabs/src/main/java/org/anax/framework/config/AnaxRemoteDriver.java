@@ -4,10 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.anax.framework.configuration.AnaxDriver;
 import org.anax.framework.controllers.WebController;
 import org.anax.framework.controllers.WebDriverWebController;
-import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.Augmenter;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +40,9 @@ public class AnaxRemoteDriver {
     @Value("${anax.target.url:http://www.google.com}")
     String targetUrl;
 
+    @Value("${anax.defaultSleepMillis:10000}")
+    Integer defaultSleepMillis;
+
 
     @ConditionalOnMissingBean
     @Bean
@@ -74,7 +75,8 @@ public class AnaxRemoteDriver {
     @ConditionalOnMissingBean
     @Bean
     public WebController getWebController(@Autowired AnaxDriver anaxDriver, @Value("${anax.defaultWaitSeconds:5}") Integer defaultWaitSeconds) throws Exception {
-        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds);
+        return new WebDriverWebController(anaxDriver.getWebDriver(), anaxDriver, defaultWaitSeconds,
+            defaultSleepMillis);
     }
 
 }
